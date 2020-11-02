@@ -1,10 +1,11 @@
 package com.yffd.jecap.admin.sys.domain.pmsn.repo;
 
+import com.yffd.jecap.admin.base.repository.IBaseRepository;
 import com.yffd.jecap.admin.sys.domain.pmsn.entity.SysPmsn;
-import com.yffd.jecap.admin.base.dao.IBaseDao;
 
-public interface ISysPmsnRepo {
+import java.util.Set;
 
-    IBaseDao<SysPmsn> getPmsnDao();
+public interface ISysPmsnRepo extends IBaseRepository<SysPmsn> {
 
+    void modifyBatchPmsnStatus(Set<String> pmsnIds, String pmsnStatus);
 }

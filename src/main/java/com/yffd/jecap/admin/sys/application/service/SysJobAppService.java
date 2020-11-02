@@ -1,6 +1,6 @@
 package com.yffd.jecap.admin.sys.application.service;
 
-import com.yffd.jecap.admin.sys.application.dto.job.JobSaveDto;
+import com.yffd.jecap.admin.sys.application.model.job.JobSaveDto;
 import com.yffd.jecap.admin.sys.domain.job.service.SysJobOrgService;
 import com.yffd.jecap.admin.sys.domain.job.service.SysJobService;
 import com.yffd.jecap.admin.base.result.RtnResult;

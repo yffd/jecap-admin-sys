@@ -1,6 +1,6 @@
 package com.yffd.jecap.admin.sys.interfaces.controller;
 
-import com.yffd.jecap.admin.sys.application.dto.job.JobSaveDto;
+import com.yffd.jecap.admin.sys.application.model.job.JobSaveDto;
 import com.yffd.jecap.admin.sys.application.service.SysJobAppService;
 import com.yffd.jecap.admin.sys.domain.job.entity.SysJob;
 import com.yffd.jecap.admin.sys.domain.job.service.SysJobService;

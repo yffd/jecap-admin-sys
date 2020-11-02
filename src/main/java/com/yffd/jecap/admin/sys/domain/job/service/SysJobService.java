@@ -3,7 +3,7 @@ package com.yffd.jecap.admin.sys.domain.job.service;
 import com.yffd.jecap.admin.sys.domain.exception.SysException;
 import com.yffd.jecap.admin.sys.domain.job.entity.SysJob;
 import com.yffd.jecap.admin.sys.domain.job.repo.ISysJobRepo;
-import com.yffd.jecap.admin.sys.infrastructure.dao.job.ISysJobDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysJobDao;
 import com.yffd.jecap.admin.base.page.PageData;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

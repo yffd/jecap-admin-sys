@@ -1,10 +1,9 @@
 package com.yffd.jecap.admin.sys.application.service;
 
-import com.yffd.jecap.admin.sys.application.dto.role.RoleSaveDto;
-import com.yffd.jecap.admin.sys.domain.role.service.SysRoleGroupService;
-import com.yffd.jecap.admin.sys.domain.role.service.SysRolePmsnService;
+import com.yffd.jecap.admin.sys.domain.rlt.service.SysRolePmsnService;
+import com.yffd.jecap.admin.sys.domain.rlt.service.SysRoleUserService;
+import com.yffd.jecap.admin.sys.domain.role.entity.SysRole;
 import com.yffd.jecap.admin.sys.domain.role.service.SysRoleService;
-import com.yffd.jecap.admin.base.result.RtnResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,55 +18,71 @@ import java.util.Set;
 @Transactional
 public class SysRoleAppService {
     @Autowired private SysRoleService roleService;
-    @Autowired private SysRoleGroupService roleGroupService;
+    @Autowired private SysRoleUserService roleUserService;
     @Autowired private SysRolePmsnService rolePmsnService;
 
-    public RtnResult add(RoleSaveDto dto) {
-        if (null == dto || null == dto.getRole()) return RtnResult.FAIL_PARAM_ISNULL();
-        this.roleService.add(dto.getRole());
-        //分配角色组
-        if (CollectionUtils.isNotEmpty(dto.getGroupIds()))
-            this.roleGroupService.addRoleGroup(dto.getRole().getId(), dto.getGroupIds());
-        //分配权限
-        if (CollectionUtils.isNotEmpty(dto.getPmsnIds()))
-            this.rolePmsnService.addRolePmsn(dto.getRole().getId(), dto.getPmsnIds());
-        return RtnResult.OK();
+    /**
+     * 添加角色，同时关联用户集
+     * @param role
+     * @param userIds   可为空
+     */
+    public void addWithUser(SysRole role, Set<String> userIds) {
+        if (null == role) return;
+        this.roleService.addBy(role);
+        // 关联用户
+        if (CollectionUtils.isNotEmpty(userIds))
+            userIds.forEach(userId -> this.roleUserService.addBy(userId, role.getRoleId()));//添加关联-用户
     }
 
-    public RtnResult update(RoleSaveDto dto) {
-        if (null == dto || null == dto.getRole()) return RtnResult.FAIL_PARAM_ISNULL();
-        String roleId = dto.getRole().getId();
-        if (StringUtils.isBlank(roleId)) return RtnResult.FAIL("【角色编号】不能为空");
-        this.roleService.updateById(dto.getRole());
-        //更新角色组
-        if (CollectionUtils.isNotEmpty(dto.getGroupIds()))
-            this.roleService.saveGroup(roleId, dto.getGroupIds());
-        //更新权限
-        if (CollectionUtils.isNotEmpty(dto.getPmsnIds())) {
-            this.roleService.savePmsn(roleId, dto.getPmsnIds());
-        }
-        return RtnResult.OK();
+    /**
+     * 添加角色，同时关联权限集
+     * @param role
+     * @param pmsnIds   可为空
+     */
+    public void addWithPmsn(SysRole role, Set<String> pmsnIds) {
+        if (null == role) return;
+        this.roleService.addBy(role);
+        // 关联权限
+        if (CollectionUtils.isNotEmpty(pmsnIds))
+            pmsnIds.forEach(pmsnId -> this.rolePmsnService.addBy(pmsnId, role.getRoleId()));//添加关联-权限
     }
 
-    public RtnResult delRoleGroup(String roleId, Set<String> groupIds) {
-        if (StringUtils.isBlank(roleId)) return RtnResult.FAIL_PARAM_ISNULL();
-        if (CollectionUtils.isEmpty(groupIds)) {
-            this.roleGroupService.delByRoleId(roleId);
-        } else {
-            this.roleGroupService.delBy(roleId, groupIds);
-        }
-        return RtnResult.OK();
+    /**
+     * 修改角色关联的用户集
+     * @param roleId
+     * @param addUserIds
+     * @param removeUserIds
+     */
+    public void modifyRltUser(String roleId, Set<String> addUserIds, Set<String> removeUserIds) {
+        if (StringUtils.isBlank(roleId)) return;
+        if (CollectionUtils.isNotEmpty(removeUserIds))
+            this.roleUserService.removeByRoleId(roleId, removeUserIds);//删除关联-用户
+        if (CollectionUtils.isNotEmpty(addUserIds))
+            addUserIds.forEach(userId -> this.roleUserService.addBy(userId, roleId));//添加关联-用户
     }
 
-    public RtnResult delRolePmsn(String roleId, Set<String> pmsnIds) {
-        if (StringUtils.isBlank(roleId)) return RtnResult.FAIL_PARAM_ISNULL();
-        if (CollectionUtils.isEmpty(pmsnIds)) {
-            this.rolePmsnService.delByRoleId(roleId);
-        } else {
-            this.rolePmsnService.delBy(roleId, pmsnIds);
-        }
-        return RtnResult.OK();
+    /**
+     * 修改角色关联的权限集
+     * @param roleId
+     * @param addPmsnIds
+     * @param removePmsnIds
+     */
+    public void modifyRltPmsn(String roleId, Set<String> addPmsnIds, Set<String> removePmsnIds) {
+        if (StringUtils.isBlank(roleId)) return;
+        if (CollectionUtils.isNotEmpty(removePmsnIds))
+            this.rolePmsnService.removeByRoleId(roleId, removePmsnIds);//删除关联-权限
+        if (CollectionUtils.isNotEmpty(addPmsnIds))
+            addPmsnIds.forEach(pmsnId -> this.rolePmsnService.addBy(pmsnId, roleId));//添加关联-权限
     }
 
-
+    /**
+     * 删除角色，同时删除关联集
+     * @param roleId
+     */
+    public void removeById(String roleId) {
+        if (StringUtils.isBlank(roleId)) return;
+        this.roleService.removeById(roleId);
+        this.roleUserService.removeByRoleId(roleId, null);//删除关联-用户
+        this.rolePmsnService.removeByRoleId(roleId, null);//删除关联-权限
+    }
 }

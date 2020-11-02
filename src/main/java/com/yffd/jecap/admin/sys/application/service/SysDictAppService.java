@@ -1,6 +1,6 @@
 package com.yffd.jecap.admin.sys.application.service;
 
-import com.yffd.jecap.admin.sys.application.dto.dict.DictSaveDto;
+import com.yffd.jecap.admin.sys.application.model.dict.DictSaveDto;
 import com.yffd.jecap.admin.sys.domain.dict.service.SysDictPropsService;
 import com.yffd.jecap.admin.sys.domain.dict.service.SysDictService;
 import com.yffd.jecap.admin.sys.domain.exception.SysException;

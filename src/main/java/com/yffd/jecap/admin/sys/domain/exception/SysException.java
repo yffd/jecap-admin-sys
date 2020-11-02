@@ -28,4 +28,8 @@ public class SysException extends BaseException {
         return new SysException(message, cause);
     }
 
+    public static SysException paramIsEmpty() {
+        return new SysException("参数为空", null);
+    }
+
 }

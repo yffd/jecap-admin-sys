@@ -1,7 +1,5 @@
 package com.yffd.jecap.admin.sys.domain.menu.service;
 
-import com.yffd.jecap.admin.base.dao.IBaseDao;
-import com.yffd.jecap.admin.sys.domain.constant.SysConsts;
 import com.yffd.jecap.admin.sys.domain.exception.SysException;
 import com.yffd.jecap.admin.sys.domain.menu.entity.SysMenu;
 import com.yffd.jecap.admin.sys.domain.menu.repo.ISysMenuRepo;
@@ -13,30 +11,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SysMenuService {
     @Autowired private ISysMenuRepo menuRepo;
 
-    private IBaseDao<SysMenu> getDao() {
-        return this.menuRepo.getMenuDao();
-    }
-
-    public void add(SysMenu menu) {
+    public String add(SysMenu menu) {
         if (null == menu || StringUtils.isBlank(menu.getMenuName())) throw SysException.cast("菜单名称不能为空").prompt();
         if (null != this.queryByMenuName(menu.getMenuName())) throw SysException.cast("菜单名称已存在").prompt();
-        this.getDao().addBy(menu);
+        if (StringUtils.isBlank(menu.getParentId())) {
+            return this.addRoot(menu);
+        } else {
+            return this.addChild(menu);
+        }
     }
 
     /**
      * 添加根节点
      * @param menu
      */
-    public void addRoot(SysMenu menu) {
-        if (null == menu || StringUtils.isBlank(menu.getMenuName())) throw SysException.cast("菜单名称不能为空").prompt();
-        if (null != this.queryByMenuName(menu.getMenuName())) throw SysException.cast("菜单名称已存在").prompt();
-        menu.setPid(SysConsts.DEF_TREE_ROOT_ID);
-        this.getDao().addBy(menu);
+    public String addRoot(SysMenu menu) {
+        if (null == menu || StringUtils.isBlank(menu.getMenuName())) throw SysException.cast("【菜单名称】不能为空").prompt();
+        if (null != this.queryByMenuName(menu.getMenuName())) throw SysException.cast("【菜单名称】已存在").prompt();
+        menu.setParentId("-1");
+        this.menuRepo.addBy(menu);
+        return menu.getMenuId();
     }
 
     /**
@@ -44,109 +44,76 @@ public class SysMenuService {
      * @param menu
      */
     @Transactional
-    public void addChild(SysMenu menu) {
-        if (null == menu || StringUtils.isBlank(menu.getMenuName())) throw SysException.cast("菜单名称不能为空").prompt();
-        if (null != this.queryByMenuName(menu.getMenuName())) throw SysException.cast("菜单名称已存在").prompt();
-        SysMenu parent = this.getDao().queryById(menu.getPid());
-        if (null == parent) throw SysException.cast("父ID不存在");
-        if (StringUtils.isBlank(parent.getPath())) {
-            menu.setPath(parent.getId());
+    public String addChild(SysMenu menu) {
+        if (null == menu || StringUtils.isBlank(menu.getMenuName())) throw SysException.cast("【菜单名称】不能为空").prompt();
+        if (null != this.queryByMenuName(menu.getMenuName())) throw SysException.cast("【菜单名称】已存在").prompt();
+        SysMenu parent = this.menuRepo.queryById(menu.getParentId());
+        if (null == parent) throw SysException.cast("父ID已不存在").prompt();
+        String parentPath = parent.getParentPath();
+        if (StringUtils.isBlank(parentPath)) {
+            menu.setParentPath(parent.getMenuId());
         } else {
-            menu.setPath(parent.getPath() + "," + parent.getId());
+            menu.setParentPath(parentPath + "," + parent.getMenuId());
         }
-        this.getDao().addBy(menu);
+        this.menuRepo.addBy(menu);
+        return menu.getMenuId();
     }
 
-    /**
-     * 只修改当前节点的信息，不包括子节点
-     * @param menu
-     */
-    public void updateById(SysMenu menu) {
-        if (null == menu || StringUtils.isBlank(menu.getId())) return;
-        menu.setPid(null);//父ID不可修改
-        this.getDao().modifyById(menu);
+    public void modifyById(SysMenu menu) {
+        if (null == menu || StringUtils.isBlank(menu.getMenuId())) return;
+        this.menuRepo.modifyById(menu);
     }
 
-    /**
-     * 修改当前节点信息，以及其子节点的path
-     * @param menu
-     * @param pid
-     */
-    @Transactional
-    public void updateById(SysMenu menu, String pid) {
-        if (null == menu || StringUtils.isBlank(menu.getId())) return;
-        SysMenu curNode = this.getDao().queryById(menu.getId());
-        if (null == curNode) return;
-        if (StringUtils.isBlank(pid)) {
-            this.getDao().modifyById(menu);//修改当前节点信息
-        } else if (!pid.equals(curNode.getPid())) {//变更父节点
-            SysMenu parent = this.getDao().queryById(pid);
-            if (null == parent) throw SysException.cast("父ID不存在");
-            String curPath = curNode.getPath();
-            String newPath = StringUtils.isBlank(parent.getPath()) ? parent.getId() : parent.getPath() + "," + parent.getId();
-            menu.setPath(newPath);
-            menu.setPid(parent.getId());
-            this.getDao().modifyById(menu);//修改当前节点信息
-
-            //更改子节点path、pid
-            List<SysMenu> children = this.queryByPath(curNode.getPath() + "," + curNode.getId());
-            if (CollectionUtils.isNotEmpty(children)) {
-                for (SysMenu child : children) {
-                    if (null == child || StringUtils.isBlank(child.getPath())) continue;
-                    String suffix = child.getPath().substring(curPath.length() + 1);
-                    String tmp = newPath + (StringUtils.isBlank(suffix) ? "" : "," + suffix);
-                    child.setPath(tmp);
-
-                    String _pid = child.getPath().substring(child.getPath().lastIndexOf(",") + 1);
-                    child.setPid(_pid);
-                    this.getDao().modifyById(child);//修改当前节点信息
-                }
-            }
-        }
-    }
-
-    @Transactional
-    public void deleteById(String menuId) {
+    public void removeById(String menuId) {
         if (null == menuId) return;
-        SysMenu menu = this.queryById(menuId);
+        this.menuRepo.removeById(menuId);
+    }
+
+    public void removeBatchById(Set<String> menuIds) {
+        if (CollectionUtils.isEmpty(menuIds)) return;
+        this.menuRepo.removeByIds(menuIds);
+    }
+
+    public void removeChildren(String menuId) {
+        if (StringUtils.isBlank(menuId)) return;
+        SysMenu menu = this.menuRepo.queryById(menuId);
         if (null == menu) return;
-        if (StringUtils.isNotBlank(menu.getPath())) {
-            this.menuRepo.removeByPath(menu.getPath() + "," + menuId);
-            this.getDao().removeById(menuId);
-        } else {
-            this.menuRepo.removeByPath(menuId);
-            this.getDao().removeById(menuId);
-        }
+        String parentPath = menu.getParentPath();
+        if (StringUtils.isBlank(parentPath)) return;
+        SysMenu entity = new SysMenu();
+        entity.setParentPath(parentPath + "," + menuId);
+        this.menuRepo.removeBy(entity);
     }
 
     public List<SysMenu> queryChildren(String menuId) {
         if (StringUtils.isBlank(menuId)) return Collections.EMPTY_LIST;
-        SysMenu entity = this.getDao().queryById(menuId);
-        if (null == entity || StringUtils.isBlank(entity.getPath())) return Collections.EMPTY_LIST;
-        return this.queryByPath(entity.getPath() + "," + entity.getId());
+        SysMenu entity = this.menuRepo.queryById(menuId);
+        if (null == entity || StringUtils.isBlank(entity.getParentPath())) return Collections.EMPTY_LIST;
+        return this.queryByPath(entity.getParentPath() + "," + entity.getMenuId());
     }
 
     public SysMenu queryByMenuName(String menuName) {
         if (StringUtils.isBlank(menuName)) return null;
         SysMenu entity = new SysMenu();
         entity.setMenuName(menuName);
-        return this.getDao().queryOne(entity);
+        return this.menuRepo.queryOne(entity);
     }
 
     public List<SysMenu> queryByPath(String path) {
         if (StringUtils.isBlank(path)) return Collections.EMPTY_LIST;
         SysMenu entity = new SysMenu();
-        entity.setPath(path);
-        return this.getDao().queryList(entity);
+        entity.setParentPath(path);
+        return this.menuRepo.queryList(entity);
     }
 
     public SysMenu queryById(String menuId) {
         if (StringUtils.isBlank(menuId)) return null;
-        return this.getDao().queryById(menuId);
+        return this.menuRepo.queryById(menuId);
     }
 
     public List<SysMenu> queryAll() {
-        return this.getDao().queryAll();
+        return this.menuRepo.queryAll();
     }
+
 
 }

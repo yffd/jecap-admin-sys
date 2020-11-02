@@ -5,8 +5,8 @@ import com.yffd.jecap.admin.base.dao.IBaseDao;
 import com.yffd.jecap.admin.sys.domain.dict.entity.SysDict;
 import com.yffd.jecap.admin.sys.domain.dict.entity.SysDictProps;
 import com.yffd.jecap.admin.sys.domain.dict.repo.ISysDictRepo;
-import com.yffd.jecap.admin.sys.infrastructure.dao.dict.ISysDictDao;
-import com.yffd.jecap.admin.sys.infrastructure.dao.dict.ISysDictPropsDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysDictDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysDictPropsDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

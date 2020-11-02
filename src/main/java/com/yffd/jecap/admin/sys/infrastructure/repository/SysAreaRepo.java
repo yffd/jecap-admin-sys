@@ -5,8 +5,8 @@ import com.yffd.jecap.admin.base.dao.IBaseDao;
 import com.yffd.jecap.admin.sys.domain.area.entity.SysArea;
 import com.yffd.jecap.admin.sys.domain.area.entity.SysAreaAddress;
 import com.yffd.jecap.admin.sys.domain.area.repo.ISysAreaRepo;
-import com.yffd.jecap.admin.sys.infrastructure.dao.area.ISysAreaAddressDao;
-import com.yffd.jecap.admin.sys.infrastructure.dao.area.ISysAreaDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysAreaAddressDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysAreaDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

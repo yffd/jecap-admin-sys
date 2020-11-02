@@ -1,85 +1,117 @@
 package com.yffd.jecap.admin.sys.domain.pmsn.service;
 
-import com.yffd.jecap.admin.base.dao.IBaseDao;
-import com.yffd.jecap.admin.base.page.PageData;
 import com.yffd.jecap.admin.sys.domain.exception.SysException;
 import com.yffd.jecap.admin.sys.domain.pmsn.entity.SysPmsn;
 import com.yffd.jecap.admin.sys.domain.pmsn.repo.ISysPmsnRepo;
-import com.yffd.jecap.admin.sys.domain.role.entity.SysRole;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 @Service
 public class SysPmsnService {
+
     @Autowired
     private ISysPmsnRepo pmsnRepo;
 
-    private IBaseDao<SysPmsn> getDao() {
-        return this.pmsnRepo.getPmsnDao();
-    }
-
-    public void add(SysPmsn pmsn) {
+    /**
+     * 添加权限，如果parentId为空，则认为是根节点
+     * @param pmsn
+     */
+    public void addBy(SysPmsn pmsn) {
         if (null == pmsn) return;
-        if (StringUtils.isAnyBlank(pmsn.getPmsnName(), pmsn.getPmsnType())) throw SysException.cast("【权限名称 | 权限类型】不能为空").prompt();
-        if (StringUtils.isNotBlank(pmsn.getPmsnCode()) && null != this.queryByPmsnCode(pmsn.getPmsnCode())) {
-            throw SysException.cast(String.format("角色编号已存在【%s】", pmsn.getPmsnCode())).prompt();
+        if (StringUtils.isBlank(pmsn.getParentId())) {
+            this.addRoot(pmsn);
+        } else {
+            this.addChild(pmsn);
         }
-        if (StringUtils.isBlank(pmsn.getPmsnStatus())) pmsn.setPmsnStatus("1");
-        this.getDao().addBy(pmsn);
     }
 
-    public String add(String pmsnName, String pmsnCode, String pmsnType, String pmsnStatus) {
-        SysPmsn pmsn = new SysPmsn(pmsnName, pmsnCode, pmsnType, pmsnStatus);
-        this.add(pmsn);
-        return pmsn.getId();
+    /**
+     * 添加根节点
+     * @param pmsn
+     */
+    public void addRoot(SysPmsn pmsn) {
+        if (null == pmsn || StringUtils.isAnyBlank(pmsn.getPmsnName(), pmsn.getPmsnCode()))
+            throw SysException.cast("【权限名称 | 权限编号】不能为空").prompt();
+        if (null != this.queryByPmsnCode(pmsn.getPmsnCode()))
+            throw SysException.cast("【权限编号】已存在").prompt();
+        pmsn.setParentId("-1");
+        this.pmsnRepo.addBy(pmsn.initValue());
     }
 
-    public void updateById(SysPmsn pmsn) {
-        if (null == pmsn || StringUtils.isBlank(pmsn.getId())) return;
-        this.getDao().modifyById(pmsn);
+    /**
+     * 添加子节点
+     * @param pmsn
+     */
+    public void addChild(SysPmsn pmsn) {
+        if (null == pmsn || StringUtils.isAnyBlank(pmsn.getPmsnName(), pmsn.getPmsnCode()))
+            throw SysException.cast("【权限名称 | 权限编号】不能为空").prompt();
+        if (null != this.queryByPmsnCode(pmsn.getPmsnCode()))
+            throw SysException.cast(String.format("【权限编号-%s】已存在", pmsn.getPmsnCode())).prompt();
+        SysPmsn parent = this.pmsnRepo.queryById(pmsn.getParentId());
+        if (null == parent) throw SysException.cast("【权限父ID】已不存在").prompt();
+        String parentPath = parent.getParentPath();
+        if (StringUtils.isBlank(parentPath)) {
+            pmsn.setParentPath(parent.getPmsnId());
+        } else {
+            pmsn.setParentPath(parentPath + "," + parent.getPmsnId());
+        }
+        this.pmsnRepo.addBy(pmsn.initValue());
     }
 
-    public void deleteById(String pmsnId) {
+    public void modifyById(SysPmsn pmsn) {
+        if (null == pmsn || StringUtils.isBlank(pmsn.getPmsnId())) return;
+        if (StringUtils.isNotBlank(pmsn.getPmsnCode())) {
+            SysPmsn entity = this.queryByPmsnCode(pmsn.getPmsnCode());
+            if (null != entity && !entity.getPmsnId().equals(pmsn.getPmsnId())) {
+                throw SysException.cast(String.format("权限编号已存在【%s】", pmsn.getPmsnCode())).prompt();
+            }
+        }
+        this.pmsnRepo.modifyById(pmsn);
+    }
+
+    public void modifyBatchPmsnStatus(Set<String> pmsnIds, String pmsnStatus) {
+        if (CollectionUtils.isEmpty(pmsnIds) || StringUtils.isBlank(pmsnStatus)) throw SysException.paramIsEmpty();
+        this.pmsnRepo.modifyBatchPmsnStatus(pmsnIds, pmsnStatus);
+    }
+
+    public void enableStatus(String pmsnId) {
+        SysPmsn entity = new SysPmsn();
+        entity.setPmsnId(pmsnId);
+        this.pmsnRepo.modifyById(entity.enableStatus());
+    }
+
+    public void disableStatus(String pmsnId) {
+        SysPmsn entity = new SysPmsn();
+        entity.setPmsnId(pmsnId);
+        this.pmsnRepo.modifyById(entity.disableStatus());
+    }
+
+    /**
+     * 删除当前节点，以及子节点
+     * @param pmsnId
+     */
+    public void removeById(String pmsnId) {
         if (StringUtils.isBlank(pmsnId)) return;
-        this.getDao().removeById(pmsnId);
+        this.pmsnRepo.removeById(pmsnId);
     }
 
     public SysPmsn queryById(String pmsnId) {
         if (StringUtils.isBlank(pmsnId)) return null;
-        return this.getDao().queryById(pmsnId);
+        return this.pmsnRepo.queryById(pmsnId);
     }
 
     public SysPmsn queryByPmsnCode(String pmsnCode) {
         if (StringUtils.isBlank(pmsnCode)) return null;
-        return this.getDao().queryOne(new SysPmsn(null, pmsnCode));
+        return this.pmsnRepo.queryOne(new SysPmsn(null, pmsnCode));
     }
 
-    public PageData<SysPmsn> queryPage(SysPmsn pmsn, int pageNum, int pageSize) {
-        return this.getDao().queryPage(pmsn, pageNum, pageSize);
-    }
 
-    public void updatePmsnName(String pmsnId, String pmsnName) {
-        if (StringUtils.isBlank(pmsnId)) return;
-        if (null == pmsnName) pmsnName = "";
-        SysPmsn entity = new SysPmsn(pmsnName, null, null);
-        entity.setId(pmsnId);
-        this.getDao().modifyById(entity);
-    }
-
-    public void enable(String pmsnId) {
-        this.updateStatus(pmsnId, "1");
-    }
-
-    public void disable(String pmsnId) {
-        this.updateStatus(pmsnId, "0");
-    }
-
-    public void updateStatus(String pmsnId, String pmsnStatus) {
-        if (StringUtils.isAnyBlank(pmsnId, pmsnStatus)) return;
-        SysPmsn entity = new SysPmsn();
-        entity.setId(pmsnId);
-        entity.setPmsnStatus(pmsnStatus);
-        this.getDao().modifyById(entity);
+    public List<SysPmsn> queryAll() {
+        return this.pmsnRepo.queryAll();
     }
 }

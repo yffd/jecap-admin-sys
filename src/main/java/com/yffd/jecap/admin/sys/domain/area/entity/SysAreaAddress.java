@@ -2,6 +2,7 @@ package com.yffd.jecap.admin.sys.domain.area.entity;
 
 import com.yffd.jecap.admin.base.entity.IBaseEntity;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -14,6 +15,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
+@NoArgsConstructor
 public class SysAreaAddress implements IBaseEntity {
 
     private static final long serialVersionUID = 1L;

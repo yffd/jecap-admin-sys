@@ -1,8 +1,8 @@
 package com.yffd.jecap.admin.sys.infrastructure.repository;
 
 import com.yffd.jecap.admin.sys.domain.job.repo.ISysJobRepo;
-import com.yffd.jecap.admin.sys.infrastructure.dao.job.ISysJobDao;
-import com.yffd.jecap.admin.sys.infrastructure.dao.job.ISysJobOrgDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysJobDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysJobOrgDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.yffd.jecap.admin.sys.domain.org.repo;
 
-import com.yffd.jecap.admin.sys.infrastructure.dao.org.ISysOrgDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysOrgDao;
 
 public interface ISysOrgRepo {
 

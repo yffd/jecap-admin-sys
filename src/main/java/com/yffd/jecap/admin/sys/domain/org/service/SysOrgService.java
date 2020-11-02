@@ -6,7 +6,7 @@ import com.yffd.jecap.admin.sys.domain.exception.SysException;
 import com.yffd.jecap.admin.sys.domain.org.entity.SysOrg;
 import com.yffd.jecap.admin.sys.domain.org.repo.ISysOrgRepo;
 import com.yffd.jecap.admin.sys.domain.org.valobj.SysOrgTree;
-import com.yffd.jecap.admin.sys.infrastructure.dao.org.ISysOrgDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysOrgDao;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;

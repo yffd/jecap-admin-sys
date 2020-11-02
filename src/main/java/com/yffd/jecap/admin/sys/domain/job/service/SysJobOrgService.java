@@ -2,7 +2,7 @@ package com.yffd.jecap.admin.sys.domain.job.service;
 
 import com.yffd.jecap.admin.sys.domain.job.repo.ISysJobRepo;
 import com.yffd.jecap.admin.sys.domain.job.entity.SysJobOrg;
-import com.yffd.jecap.admin.sys.infrastructure.dao.job.ISysJobOrgDao;
+import com.yffd.jecap.admin.sys.infrastructure.dao.ISysJobOrgDao;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

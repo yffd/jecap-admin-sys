@@ -1,6 +1,6 @@
 package com.yffd.jecap.admin.sys.interfaces.controller;
 
-import com.yffd.jecap.admin.sys.application.dto.file.FileSaveDto;
+import com.yffd.jecap.admin.sys.application.model.file.FileSaveDto;
 import com.yffd.jecap.admin.sys.application.service.SysFileAppService;
 import com.yffd.jecap.admin.sys.domain.file.entity.SysFile;
 import com.yffd.jecap.admin.sys.domain.file.service.SysFileService;

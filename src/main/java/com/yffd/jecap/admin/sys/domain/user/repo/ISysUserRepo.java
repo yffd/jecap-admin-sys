@@ -1,20 +1,13 @@
 package com.yffd.jecap.admin.sys.domain.user.repo;
 
-import com.yffd.jecap.admin.sys.infrastructure.dao.user.*;
+import com.yffd.jecap.admin.base.repository.IBaseRepository;
+import com.yffd.jecap.admin.sys.domain.user.entity.SysUser;
 
 import java.util.Set;
 
-public interface ISysUserRepo {
+public interface ISysUserRepo extends IBaseRepository<SysUser> {
 
-    ISysUserDao getUserDao();
-    ISysUserGroupDao getUserGroupDao();
-    ISysUserRoleDao getUserRoleDao();
-    ISysUserJobDao getUserJobDao();
-    ISysUserLoginDao getUserLoginDao();
+    Set<String> queryRltRoleCode(String userId);
 
-    void removeRole(String userId, Set<String> roleIds);
-
-    void removeGroup(String userId, Set<String> groupIds);
-
-    void removeJob(String userId, Set<String> jobIds);
+    Set<String> queryRltPmsnCode(String userId);
 }
